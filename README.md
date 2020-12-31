@@ -25,10 +25,11 @@ While being able to explicitly alter default behavior.
 
 ```python
 import validators
-from unconfig import UnConfig, UnConfigItem
+from unconfig import UnConfig
+from unconfig.item import UnConfigItem, UnConfigIncremeterItem
 
-def url_helper(value):
-	# This helper will validate whether a Valid URL is provided
+def url_filter(value):
+	# This filter will validate whether a Valid URL is provided
 	if validators.url(value):
 		return value
 	else:
@@ -36,19 +37,26 @@ def url_helper(value):
 
 # define your configuration
 class MyConfig(UnConfig):
-	verbose_level = UnConfigItem(default=0, long='verbose', short='v',
-								 helper=int,
-								 help="Verbosity level, takes an integer")
-	url = UnConfigItem(help="URL to print", helper=url_helper)
+	def setup(self): 
+		self.verbose_level = UnConfigIncremeterItem(default=0, long='verbose', short='v',
+									 filter=int,
+									 help="Verbosity level, takes an integer")
+		self.url = UnConfigItem(help="URL to print", helper=url_filter)
 
 # tell your object where to find config data
 config = MyConfig(container='myapp', configfile='myapp.conf', env_prefix="myapp_")
 config.load() # does it all! Processes config files, env vars, and command options
 
+
 if config.verbose_level == 1:
 	print("Being verbose")
 
-print(config.url)
+# the following two do the same
+print(str(config.url)) 
+print(config.url.value)
+
+# change in program:
+config.url.value = "http://new-url"
 
 ```
 
